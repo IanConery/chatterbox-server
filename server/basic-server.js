@@ -1,53 +1,62 @@
-/* Import node's http module: */
-var requestHandler = require('./request-handler');
-var handleRequest = requestHandler.requestHandler;
-var http = require("http");
-var serveStatic = require("serve-static");
-var finalHandler = require("finalhandler");
-var 
+// Express JS Servervar express = require('express');
+var express = require('express');
+var app = express();
+var cors = require('cors');
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
 
+var data = [];
 
-var serve = serveStatic("./../client");
-var staticServer = http.createServer(function(req, res){
-  var done = finalHandler(req, res);
-  serve(req, res, done);
+var objectId = 0;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors());
+
+//get data
+app.get('/classes/messages/:room', function (req, res) {
+  //res.render(req.params.room)
+  var results = [];
+  var responseObj = {};
+  data.forEach(function(dataObj){
+    if(dataObj.roomname === req.params.room){
+      results.push(dataObj);
+    }
+  });
+  responseObj['results'] = results;
+  res.send(JSON.stringify(responseObj));
+});
+app.get('/classes/messages', function (req, res) {
+  //res.render(req.params.room)
+  var responseObj = {};
+
+  responseObj['results'] = data;
+  res.json(responseObj);
 });
 
-staticServer.listen(8000);
-// Every server needs to listen on a port with a unique number. The
-// standard port for HTTP servers is port 80, but that port is
-// normally already claimed by another server and/or not accessible
-// so we'll use a standard testing port like 3000, other common development
-// ports are 8080 and 1337.
-var port = 3000;
+//post data
+app.post('/classes/messages/:room', function(req, res){
+  var newMessage = req.body;
+  newMessage['roomname']  = req.params.room;
+  newMessage['objectId'] = objectId;
 
-// For now, since you're running this server on your local machine,
-// we'll have it listen on the IP address 127.0.0.1, which is a
-// special address that always refers to localhost.
-var ip = "127.0.0.1";
- //Comment in new branch
+  objectId++;
+  data.push(newMessage);
+  res.send(JSON.stringify(newMessage));
+});
+app.post('/classes/messages', function(req, res){
+  var newMessage = req.body;
+  newMessage['objectId'] = objectId;
+
+  objectId++;
+  data.push(newMessage);
+  res.send(JSON.stringify(newMessage));
+});
 
 
-// We use node's http module to create a server.
-//
-// The function we pass to http.createServer will be used to handle all
-// incoming requests.
-//
-// After creating the server, we will tell it to listen on the given port and IP. */
-var server = http.createServer(handleRequest);
-console.log("Listening on http://" + ip + ":" + port);
-server.listen(port, ip);
+var server = app.listen(3000, function () {
+  var host = server.address().address;
+  var port = server.address().port;
 
-// To start this server, run:
-//
-//   node basic-server.js
-//
-// on the command line.
-//
-// To connect to the server, load http://127.0.0.1:3000 in your web
-// browser.
-//
-// server.listen() will continue running as long as there is the
-// possibility of serving more requests. To stop your server, hit
-// Ctrl-C on the command line.
-
+//  console.log('Example app listening at http://%s:%s', host, port);
+});

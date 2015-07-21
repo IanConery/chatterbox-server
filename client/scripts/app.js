@@ -63,8 +63,9 @@ $(function() {
         //data: { order: '-createdAt'},
         success: function(data) {
           console.log('chatterbox: Messages fetched');
-
           // Don't bother if we have nothing to work with
+          app.stopSpinner();
+          console.log(data.results.length);
           if (!data.results || !data.results.length) { return; }
 
           // Get the last message
@@ -93,7 +94,7 @@ $(function() {
     },
     populateMessages: function(results, animate) {
       // Clear existing messages
-
+      //var results = JSON.parse(results);
       app.clearMessages();
       app.stopSpinner();
       if (Array.isArray(results)) {
@@ -113,8 +114,9 @@ $(function() {
       }
     },
     populateRooms: function(results) {
-      app.$roomSelect.html('<option value="__newRoom">New room...</option><option value="" selected>Lobby</option></select>');
-
+      //<option value="" selected>lobby</option>
+      app.$roomSelect.html('<option value="__newRoom">New room...</option></select>');
+      //var results = JSON.parse(results);
       if (results) {
         var rooms = {};
         results.forEach(function(data) {
