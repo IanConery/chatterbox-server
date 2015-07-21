@@ -13,23 +13,10 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 var url = require('url');
 var fs = require('fs');
-var data = [];
+var data = [{"roomname": "room1", "username": "John", "text": "hello", "objectId":0 },{"roomname": "room5", "username": "Jason", "text": "world","objectId":1 }];
+var messageId = 2;
 
 var requestHandler = function(request, response) {
-  // Request and Response come from node's http module.
-  //
-  // They include information about both the incoming request, such as
-  // headers and URL, and about the outgoing response, such as its status
-  // and content.
-  //
-  // Documentation for both request and response can be found in the HTTP section at
-  // http://nodejs.org/documentation/api/
-
-  // Do some basic logging.
-  //
-  // Adding more logging to your server can be an easy way to get passive
-  // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
 
   var responseObj = {};
 
@@ -44,16 +31,24 @@ var requestHandler = function(request, response) {
     
     headers['Content-Type'] = "application/json";
     var results = [];
+
     if(pathArray[1] === undefined){
       var statusCode = 404;
       response.writeHead(statusCode, headers);
       response.end();
     }
-    var statusCode = 200;
-    response.writeHead(statusCode, headers);
-    for(var i = 0; i < data.length; i++){
-      if(data[i].room === pathArray[1]){
-        results.push(data[i]);
+    else if(pathArray[1] === 'messages'){
+      var statusCode = 200;
+      response.writeHead(statusCode, headers);
+      results = data;
+
+    } else{ 
+      var statusCode = 200;
+      response.writeHead(statusCode, headers);
+      for(var i = 0; i < data.length; i++){
+        if(data[i].room === pathArray[1]){
+          results.push(data[i]);
+        }
       }
     }
     
@@ -68,18 +63,25 @@ var requestHandler = function(request, response) {
     });
     request.on('end', function(){
       var newMessage = JSON.parse(body);
+      newMessage['objectId'] = messageId;
       if(!newMessage.room){
         newMessage['room'] = pathArray[1];
       }
 
       data.push(newMessage)
+      messageId++;
+
       response.writeHead(statusCode, headers);
       response.end(JSON.stringify(newMessage));
-    });
-    
-    
+    });    
   }
   
+  else if(request.method === 'OPTIONS'){
+    var statusCode = 200;
+    response.writeHead(statusCode, defaultCorsHeaders);
+    response.end();
+  }
+
 };
 
 
@@ -88,18 +90,8 @@ var defaultCorsHeaders = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
   "access-control-allow-headers": "content-type, accept",
-  "access-control-max-age": 10 // Seconds.
+  "access-control-max-age": 10
 };
-
-// These headers will allow Cross-Origin Resource Sharing (CORS).
-// This code allows this server to talk to websites that
-// are on different domains, for instance, your chat client.
-//
-// Your chat client is running from a url like file://your/chat/client/index.html,
-// which is considered a different domain.
-//
-// Another way to get around this restriction is to serve you chat
-// client from this domain by setting up static file serving.
 
 
 exports.requestHandler = requestHandler;
