@@ -4,6 +4,7 @@ var handleRequest = requestHandler.requestHandler;
 var http = require("http");
 var serveStatic = require("serve-static");
 var finalHandler = require("finalhandler");
+var 
 
 
 var serve = serveStatic("./../client");
@@ -24,7 +25,7 @@ var port = 3000;
 // we'll have it listen on the IP address 127.0.0.1, which is a
 // special address that always refers to localhost.
 var ip = "127.0.0.1";
-
+ //Comment in new branch
 
 
 // We use node's http module to create a server.
