@@ -9,6 +9,23 @@ var data = [];
 
 var objectId = 0;
 
+mongoose.connect('mongodb://127.0.0.1/chatterbox');
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function (callback) {
+  console.log("yay!");
+});
+
+var messageSchema = mongoose.Schema({
+  text: String,
+  username: String,
+  roomname: String,
+  objectId: Number
+});
+
+var Message = mongoose.model('Message', messageSchema);
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
@@ -30,27 +47,50 @@ app.get('/classes/messages', function (req, res) {
   //res.render(req.params.room)
   var responseObj = {};
 
-  responseObj['results'] = data;
-  res.json(responseObj);
+  Message.find(function (err, messages) {
+    if (err) return console.error(err);
+      responseObj['results'] = messages;
+      res.json(responseObj);
+  });
 });
 
 //post data
 app.post('/classes/messages/:room', function(req, res){
-  var newMessage = req.body;
-  newMessage['roomname']  = req.params.room;
-  newMessage['objectId'] = objectId;
+  var postMessage = req.body;
+  postMessage['roomname']  = req.params.room;
+  postMessage['objectId'] = objectId;
+
+  var newMessage = new Message({
+    text: postMessage.text,
+    roomname: postMessage.roomname,
+    username: postMessage.username,
+    objectId: postMessage.objectId
+  })
 
   objectId++;
-  data.push(newMessage);
-  res.send(JSON.stringify(newMessage));
+  newMessage.save(function (err) {
+    if (err) return console.error(err);
+  });
+
+  res.send(JSON.stringify(postMessage));
 });
 app.post('/classes/messages', function(req, res){
-  var newMessage = req.body;
-  newMessage['objectId'] = objectId;
+  var postMessage = req.body;
+  postMessage['objectId'] = objectId;
 
-  objectId++;
-  data.push(newMessage);
-  res.send(JSON.stringify(newMessage));
+  var newMessage = new Message({
+    text: postMessage.text,
+    roomname: postMessage.roomname,
+    username: postMessage.username,
+    objectId: postMessage.objectId
+  })
+
+  newMessage.save(function (err) {
+    if (err) return console.error(err);
+      objectId++;
+      res.send(JSON.stringify(postMessage));
+  });
+  
 });
 
 
@@ -58,5 +98,5 @@ var server = app.listen(3000, function () {
   var host = server.address().address;
   var port = server.address().port;
 
-//  console.log('Example app listening at http://%s:%s', host, port);
+//  console.log('Example app listening on port %s', port);
 });
